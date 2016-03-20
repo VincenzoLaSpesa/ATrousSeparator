@@ -6,10 +6,18 @@ package Main;
 
 import Tools.MultipleImageViewer;
 import Algorithms.ATrousWavelet;
+import Algorithms.HistogramStretchLinear;
 import Catalano.Imaging.FastBitmap;
 import Catalano.Imaging.Filters.HistogramStretch;
+import Catalano.Imaging.Tools.ImageHistogram;
+import Catalano.Imaging.Tools.ImageStatistics;
+import java.awt.geom.Point2D;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 
@@ -29,17 +37,40 @@ public class MainClass {
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) {
+    public static void main(String[] args)  {
 
         //Loads an image.
-        FastBitmap fb = new FastBitmap("lena_std.png");
-              
-        List<FastBitmap> livelli=ATrousWavelet.applyTransform(fb, 5);
+        FastBitmap fb = new FastBitmap("pp.png");
+
+        List<FastBitmap> livelli = ATrousWavelet.applyTransform(fb, 8);
+
+        HistogramStretchLinear hs = new HistogramStretchLinear();
+
+        int n = 0;
+        StringBuilder sb = new StringBuilder("[");
+        for (FastBitmap l : livelli) {
+            String path = String.format("L%d.png", n++);
+            float p = hs.applyInPlaceVerbose(l);
+            sb.append(p).append(",");
+            System.out.println(p);
+            l.saveAsPNG(path);
+        }
+        char[] json = sb.toString().toCharArray();
+        json[json.length - 1] = ']';
         
-       
-        HistogramStretch hs= new HistogramStretch();
-        livelli.parallelStream().forEach( e -> { hs.applyInPlace(e); } );
+        tryWriteFile("levels.json", json.toString());
+
         //Show the result.
-        MultipleImageViewer.show(livelli, Arrays.asList("Livello 1","Livello 2","Livello 3","Livello 4","Livello 5", "Residuo"),3);
+        MultipleImageViewer.show(livelli, Arrays.asList("Livello 1", "Livello 2", "Livello 3", "Livello 4", "Livello 5", "Residuo"), 3);
+    }
+    
+    public static boolean tryWriteFile(String filename, String data){
+        try (PrintWriter out = new PrintWriter(filename)) {
+            out.println(data);
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(MainClass.class.getName()).log(Level.SEVERE, null, ex);
+            return false;
+        }
+        return true;    
     }
 }
