@@ -46,21 +46,36 @@ public class ATrousWavelet {
     public FastBitmap Forward() {
         //Ok, it's not very smart to use a normal convolution with a tensorial and punched kernel. But it works.
         FastBitmap t = new FastBitmap(img);
-        Convolution c = new Convolution(K, 16, true);
+        Convolution c = new Convolution(K, 16, false);
         c.applyInPlace(img); // img=img © K    
         K = pierceKernel(K);
-        Subtract s = new Subtract(img);
-        s.applyInPlace(t);
+        /*Subtract s = new Subtract(img);
+        s.applyInPlace(t);*/
+        t= subtract(t, img);
         return t; // img - img © K
     }
 
     public FastBitmap getResidual() {
         return new FastBitmap(img);
     }
+    
+    /**
+     * Subtract from a copy
+     * @param A
+     * @param B
+     * @return A-B
+     */
+    private static FastBitmap subtract(FastBitmap A, FastBitmap B){
+        Subtract s = new Subtract(B);
+        FastBitmap C=new FastBitmap(A);
+        s.applyInPlace(C);
+        return C;
+    }
 
-    public static int[][] pierceKernel(int[][] kernel) {
+    public static synchronized int[][] pierceKernel(int[][] kernel) {
         int n = kernel.length;
         int N = n * 2 - 1;
+        System.out.println("Kernel -> "+N);
         int[][] k = new int[N][N];
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
@@ -86,8 +101,7 @@ public class ATrousWavelet {
         Add adder;
         for (FastBitmap l : levels) {
             if(out==null){
-                out=new FastBitmap(l);
-                
+                out=new FastBitmap(l);                
             }else{
                 adder= new Add(l);
                 adder.applyInPlace(out);

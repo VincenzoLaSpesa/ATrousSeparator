@@ -50,7 +50,7 @@ public class MainClass {
 
         List<FastBitmap> livelli = ATrousWavelet.applyTransform(fb, 6);
         
-        HistogramStretchLinear hs = new HistogramStretchLinear();
+        final HistogramStretchLinear hs = new HistogramStretchLinear();
         
         FastBitmap recomposition=ATrousWavelet.inverseTransform(livelli);
         recomposition.saveAsPNG("ricomponi.png");
@@ -67,24 +67,16 @@ public class MainClass {
         //
              
         int n = 0;
-        StringBuilder sb = new StringBuilder("[");
         for (FastBitmap l : livelli) {
             String path = String.format("L%d.png", n++);
-            javafx.geometry.Point2D p = hs.applyInPlaceVerbose(l);
-            //float p=1;
-            sb.append(String.format("[%f , %f ],", p.getX(), p.getY()));
-            System.out.println(p);
             l.saveAsPNG(path);
         }
-        char[] json = sb.toString().toCharArray();
-        json[json.length - 1] = ']';
-
         
-        /*ExecutorService executor= Executors.newWorkStealingPool();
-        executor.awaitTermination(1, TimeUnit.DAYS);*/
-        tryWriteFile("levels.json", new String(json));
-       
+        livelli.stream().parallel().forEach(e ->{
+            hs.applyInPlace(e);
+        });
 
+              
         //Show the result.
         MultipleImageViewer.show(Arrays.asList(fb,recomposition, delta), Arrays.asList("In", "Out","Delta",info), 3);
         MultipleImageViewer.show(livelli, Arrays.asList("Livello 1", "Livello 2", "Livello 3", "Livello 4", "Livello 5", "Residuo"), 3);
