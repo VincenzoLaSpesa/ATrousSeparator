@@ -8,6 +8,7 @@ package Algorithms;
 
 import Catalano.Imaging.FastBitmap;
 import Catalano.Imaging.Filters.HistogramStretch;
+import javafx.geometry.Point2D;
 
 /**
  * Stretch histogram across the entire gray level range, which has the effect of increasing the contrast of a low contrast image.
@@ -23,7 +24,7 @@ public class HistogramStretchLinear extends HistogramStretch{
         this.min = 0;
     }
     
-    public float applyInPlaceVerbose(FastBitmap fastBitmap){
+    public Point2D applyInPlaceVerbose(FastBitmap fastBitmap){
         int size = fastBitmap.getSize();
         
         if (fastBitmap.isGrayscale()) {
@@ -37,7 +38,7 @@ public class HistogramStretchLinear extends HistogramStretch{
                 stretch = (((gray - grayMin)/(grayMax - grayMin)) * (max - min)) + min;
                 fastBitmap.setGray(x, (int)stretch);
             }
-            return grayMax;
+            return new Point2D(grayMin, grayMax);
         }
         else{
             float[] colorMax = getMaxRGB(fastBitmap);
@@ -60,7 +61,8 @@ public class HistogramStretchLinear extends HistogramStretch{
                 fastBitmap.setRGB(x, (int)stretchRed, (int)stretchGreen, (int)stretchBlue);
                 
             }
-            return globalMax;
+            
+            return new Point2D(globalMin, globalMax);
         }
     }
     

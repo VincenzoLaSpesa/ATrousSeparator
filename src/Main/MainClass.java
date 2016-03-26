@@ -7,8 +7,10 @@ package Main;
 import Tools.MultipleImageViewer;
 import Algorithms.ATrousWavelet;
 import Algorithms.HistogramStretchLinear;
+import Catalano.Imaging.Concurrent.Filters.Grayscale;
 import Catalano.Imaging.FastBitmap;
 import Catalano.Imaging.Filters.HistogramStretch;
+import Catalano.Imaging.Filters.Subtract;
 import Catalano.Imaging.Tools.ImageHistogram;
 import Catalano.Imaging.Tools.ImageStatistics;
 import java.awt.geom.Point2D;
@@ -44,17 +46,33 @@ public class MainClass {
     public static void main(String[] args) throws InterruptedException {
 
         //Loads an image.
-        FastBitmap fb = new FastBitmap("pp.png");
+        FastBitmap fb = new FastBitmap("M.png");
 
-        List<FastBitmap> livelli = ATrousWavelet.applyTransform(fb, 8);
-        final HistogramStretchLinear hs = new HistogramStretchLinear();
+        List<FastBitmap> livelli = ATrousWavelet.applyTransform(fb, 6);
+        
+        HistogramStretchLinear hs = new HistogramStretchLinear();
+        
+        FastBitmap recomposition=ATrousWavelet.inverseTransform(livelli);
+        recomposition.saveAsPNG("ricomponi.png");
+        
+        //calcolo il delta
+        FastBitmap delta=new FastBitmap(recomposition);
+        Subtract sub= new Subtract(fb);
+        sub.applyInPlace(delta);
+        FastBitmap buffer=new FastBitmap(delta);
+        Grayscale gs= new Grayscale(Grayscale.Algorithm.Average);
+        gs.applyInPlace(delta);
+        String info= String.format("Max: %s\n Min: %s\n Var: %s", ImageStatistics.Maximum(delta),ImageStatistics.Minimum(delta),ImageStatistics.Variance(delta));
+        delta=buffer;
+        //
              
         int n = 0;
         StringBuilder sb = new StringBuilder("[");
         for (FastBitmap l : livelli) {
             String path = String.format("L%d.png", n++);
-            float p = hs.applyInPlaceVerbose(l);
-            sb.append(p).append(",");
+            javafx.geometry.Point2D p = hs.applyInPlaceVerbose(l);
+            //float p=1;
+            sb.append(String.format("[%f , %f ],", p.getX(), p.getY()));
             System.out.println(p);
             l.saveAsPNG(path);
         }
@@ -64,9 +82,11 @@ public class MainClass {
         
         /*ExecutorService executor= Executors.newWorkStealingPool();
         executor.awaitTermination(1, TimeUnit.DAYS);*/
-        tryWriteFile("levels.json", json.toString());
+        tryWriteFile("levels.json", new String(json));
+       
 
         //Show the result.
+        MultipleImageViewer.show(Arrays.asList(fb,recomposition, delta), Arrays.asList("In", "Out","Delta",info), 3);
         MultipleImageViewer.show(livelli, Arrays.asList("Livello 1", "Livello 2", "Livello 3", "Livello 4", "Livello 5", "Residuo"), 3);
     }
 

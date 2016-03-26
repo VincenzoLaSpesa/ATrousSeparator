@@ -7,7 +7,6 @@ package Tools;
 
 import Catalano.Imaging.FastBitmap;
 import java.awt.GridLayout;
-import java.awt.LayoutManager;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JLabel;
@@ -45,9 +44,7 @@ public abstract class MultipleImageViewer {
         for (int n = 0; n < N; n++) {
             JLabel l = new JLabel();
             if (imgs.size() > n) {
-
-                l.setIcon(imgs.get(n).toIcon());
-                myPanel.add(l);
+                l.setIcon(imgs.get(n).toIcon());                
             }
             l.setVerticalTextPosition(SwingConstants.BOTTOM);
             l.setHorizontalTextPosition(SwingConstants.CENTER);
@@ -56,6 +53,7 @@ public abstract class MultipleImageViewer {
             } else {
                 l.setText("_");
             }
+            myPanel.add(l);
         }
         JOptionPane.showMessageDialog(null, myPanel);
     }

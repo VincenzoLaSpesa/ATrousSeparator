@@ -8,6 +8,7 @@ package Algorithms;
 import Catalano.Imaging.FastBitmap;
 import Catalano.Imaging.Filters.Convolution;
 import Catalano.Imaging.Filters.Subtract;
+import Catalano.Imaging.Filters.Add;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -22,7 +23,7 @@ public class ATrousWavelet {
 
     
     private int width, height;
-    private FastBitmap img; //immagine da processare
+    private final FastBitmap img; //immagine da processare
     private int[][] K;
 
     /**
@@ -73,10 +74,27 @@ public class ATrousWavelet {
         ATrousWavelet transformer = new ATrousWavelet(source);
         LinkedList<FastBitmap> out = new LinkedList<>();
         for (int i = 0; i < levels; i++) {
+            System.out.println(i);
             out.add(transformer.Forward());
         }
         out.add(transformer.getResidual());
         return out;
     }
+    
+    public static FastBitmap inverseTransform(List<FastBitmap> levels) {
+        FastBitmap out=null;
+        Add adder;
+        for (FastBitmap l : levels) {
+            if(out==null){
+                out=new FastBitmap(l);
+                
+            }else{
+                adder= new Add(l);
+                adder.applyInPlace(out);
+            }
+        }
+        return out;
+    }
+    
 
 }
