@@ -5,26 +5,26 @@
 package Main;
 
 import Tools.MultipleImageViewer;
-import Algorithms.ATrousWavelet;
+import Algorithms.FloatATrousWavelet;
 import Algorithms.HistogramStretchLinear;
 import Catalano.Imaging.Concurrent.Filters.Grayscale;
 import Catalano.Imaging.FastBitmap;
-import Catalano.Imaging.Filters.HistogramStretch;
 import Catalano.Imaging.Filters.Subtract;
-import Catalano.Imaging.Tools.ImageHistogram;
 import Catalano.Imaging.Tools.ImageStatistics;
-import java.awt.geom.Point2D;
+import Structure.FloatImage;
+import java.awt.Image;
+import java.awt.image.BufferedImage;
+import java.awt.image.WritableRaster;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
+import sun.awt.image.WritableRasterNative;
 
 public class MainClass {
 
@@ -46,15 +46,19 @@ public class MainClass {
     public static void main(String[] args) throws InterruptedException {
 
         //Loads an image.
-        FastBitmap fb = new FastBitmap("M.png");
+        final FastBitmap fb = new FastBitmap("M.png");
+        
+        FloatImage fi= new FloatImage(fb);
 
-        List<FastBitmap> livelli = ATrousWavelet.applyTransform(fb, 6);
+        List<FloatImage> livelli = FloatATrousWavelet.applyTransform(fi, 6);
         
         final HistogramStretchLinear hs = new HistogramStretchLinear();
         
-        FastBitmap recomposition=ATrousWavelet.inverseTransform(livelli);
+        FastBitmap recomposition=FloatATrousWavelet.inverseTransform(livelli).toFastBitmap();
         recomposition.saveAsPNG("ricomponi.png");
         
+        
+
         //calcolo il delta
         FastBitmap delta=new FastBitmap(recomposition);
         Subtract sub= new Subtract(fb);
@@ -67,19 +71,28 @@ public class MainClass {
         //
              
         int n = 0;
-        for (FastBitmap l : livelli) {
-            String path = String.format("L%d.png", n++);
-            l.saveAsPNG(path);
-        }
         
-        livelli.stream().parallel().forEach(e ->{
+               
+        LinkedList<FastBitmap> livelliFast= new LinkedList<>();
+        
+        for (FloatImage l : livelli) {
+            String path = String.format("L%d.png", n++);
+            FastBitmap tmp=l.toFastBitmap();
+            tmp.saveAsPNG(path);
+            livelliFast.add(tmp);
+        }
+        livelli.clear();
+        
+        
+        
+        livelliFast.stream().parallel().forEach(e ->{
             hs.applyInPlace(e);
         });
 
               
         //Show the result.
         MultipleImageViewer.show(Arrays.asList(fb,recomposition, delta), Arrays.asList("In", "Out","Delta",info), 3);
-        MultipleImageViewer.show(livelli, Arrays.asList("Livello 1", "Livello 2", "Livello 3", "Livello 4", "Livello 5", "Residuo"), 3);
+        MultipleImageViewer.show(livelliFast, Arrays.asList("Livello 1", "Livello 2", "Livello 3", "Livello 4", "Livello 5", "Residuo"), 3);
     }
 
     public static boolean tryWriteFile(String filename, String data) {

@@ -46,7 +46,7 @@ public class ATrousWavelet {
     public FastBitmap Forward() {
         //Ok, it's not very smart to use a normal convolution with a tensorial and punched kernel. But it works.
         FastBitmap t = new FastBitmap(img);
-        Convolution c = new Convolution(K, 16, false);
+        Convolution c = new Convolution(K, 16, true);
         c.applyInPlace(img); // img=img © K    
         K = pierceKernel(K);
         /*Subtract s = new Subtract(img);
@@ -72,10 +72,9 @@ public class ATrousWavelet {
         return C;
     }
 
-    public static synchronized int[][] pierceKernel(int[][] kernel) {
+    public static int[][] pierceKernel(int[][] kernel) {
         int n = kernel.length;
         int N = n * 2 - 1;
-        System.out.println("Kernel -> "+N);
         int[][] k = new int[N][N];
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
